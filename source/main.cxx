@@ -8,10 +8,10 @@
 #include <eigen3/Eigen/Dense>
 
 template<u64 N>
-using Vector = Eigen::Vector<f64, N>;
+using Vecf64 = Eigen::Vector<f64, N>;
 
 template<u64 N, u64 M>
-using Matrix = Eigen::Matrix<f64, N, M>;
+using Matf64 = Eigen::Matrix<f64, N, M>;
 
 struct pos {
   f64 x, y;
@@ -42,8 +42,8 @@ public:
   }
 
 private:
-  Matrix<N, N> gen_a(Vector<N> angs) {
-    Matrix<N, N> a;
+  Matf64<N, N> gen_a(Vecf64<N> angs) {
+    Matf64<N, N> a;
     for (i64 i = 0; i < N; ++i) {
       for (i64 j = 0; j < N; ++j) {
         // TODO: This might need to be j, i instead
@@ -53,8 +53,8 @@ private:
     return a;
   }
 
-  Vector<N> gen_b(Vector<N> angs, Vector<N> dangs) {
-    Vector<N> b;
+  Vecf64<N> gen_b(Vecf64<N> angs, Vecf64<N> dangs) {
+    Vecf64<N> b;
     for (i64 i = 0; i < N; ++i) {
       f64 b_i = 0;
       for (i64 j = 0; j < N; ++j) {
@@ -66,7 +66,7 @@ private:
     return b;
   }
 
-  std::pair<Vector<N>, Vector<N>> f(Vector<N> angs, Vector<N> dangs) {
+  std::pair<Vecf64<N>, Vecf64<N>> f(Vecf64<N> angs, Vecf64<N> dangs) {
     auto a = gen_a(angs);
     auto b = gen_b(angs, dangs);
     auto x = a.colPivHouseholderQr().solve(b);
@@ -86,8 +86,8 @@ private:
   }
 
   f64 g;
-  Vector<N> thetas;
-  Vector<N> theta_dots;
+  Vecf64<N> thetas;
+  Vecf64<N> theta_dots;
 };
 
 int main(int, char**) {
