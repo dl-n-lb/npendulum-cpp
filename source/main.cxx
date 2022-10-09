@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <cmath>
 #include <types/type_alias.hxx>
+#include <graphics/raylib_window/raylib_window.hxx>
 
 #include <eigen3/Eigen/Dense>
 
