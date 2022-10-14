@@ -1,8 +1,12 @@
 // N Pendulum simulation
 
 #include <stdio.h>
+#include <iostream>
+#include <chrono>
 #include <cmath>
 #include <types/type_alias.hxx>
+#define RAYLIB_WINDOW_IMPL
+#define RAYLIB_RENDERER_IMPL
 #include <graphics/raylib_window/raylib_window.hxx>
 
 #include <eigen3/Eigen/Dense>
@@ -20,7 +24,7 @@ struct pos {
 template<u64 N>
 class Pendulum {
 public:
-  Pendulum(f64 gravity = 9.8) : g(gravity) {
+  Pendulum(f64 scale = 1.0, f64 gravity = 9.8) : s(scale), g(gravity) {
     thetas.fill(0.5 * M_PI);
     theta_dots.fill(0);
   }
@@ -34,8 +38,8 @@ public:
     vec<pos> coords;
     for (u64 i = 0; i < N; ++i) {
       auto theta = thetas.coeff(i);
-      x += sin(theta);
-      y += cos(theta);
+      x += sin(theta)*s;
+      y += cos(theta)*s;
       coords.push_back({x, y});
     }
     return coords;
@@ -69,7 +73,7 @@ private:
   std::pair<Vecf64<N>, Vecf64<N>> f(Vecf64<N> angs, Vecf64<N> dangs) {
     auto a = gen_a(angs);
     auto b = gen_b(angs, dangs);
-    auto x = a.colPivHouseholderQr().solve(b);
+    Vecf64<N> x = a.colPivHouseholderQr().solve(b);
     return std::make_pair(dangs, x);
   }
 
@@ -86,15 +90,51 @@ private:
   }
 
   f64 g;
+  f64 s;
   Vecf64<N> thetas;
   Vecf64<N> theta_dots;
 };
 
+
+static constexpr u32 scr_width = 1600;
+static constexpr u32 scr_height = 1000;
+static constexpr u64 fps = 240;
+
+// TODO: CUSTOM OPTIONS FOR WTV LIKE ACCURACY, ETC (N IS COMPILE TIME ATM)
+// PERHAPS THERE CAN BE A DYNAMIC VERSION
+// THERE IS NO WAY THAT HIGHER NUMBERS ARE ACCURATE RIGHT?
+// PERHAPS PRINT OUT ENERGY OR LAGRANGIAN
 int main(int, char**) {
   printf("Hello, world!");
-  Pendulum<4> p{};
-  for(;;) {
-    p.step(1/60.0);
+  Pendulum<8> p{40};
+
+  RaylibWindow rw = RaylibWindow{scr_width, scr_height, "Gamer"};
+
+  auto start = std::chrono::system_clock::now();
+
+  u64 frame_cnt = 0;
+
+  rw.setTargetFPS(fps);
+
+  auto update_fn = [&p](RaylibWindow* win) {
+    p.step(1.0/fps);
+    win->getRenderer(BLACK);
+    pos prev = {0, 0};
+    for(auto coord : p.get_coords()) {
+      // TODO: Narrowing here needs to be explicit
+      DrawLine(prev.x + scr_width/2, prev.y + scr_height/2,
+               coord.x + scr_width/2, coord.y + scr_height/2, RAYWHITE);
+      prev = coord;
+    }
+  };
+  while(!rw.shouldClose()) {
+    ++frame_cnt;
+    rw.Update(update_fn);
   }
+
+  auto dur = std::chrono::duration_cast<std::chrono::seconds>
+    (std::chrono::system_clock::now() - start).count();
+
+  printf("Average FPS: %lf\n", (f64)frame_cnt / dur);
   return 0;
 }

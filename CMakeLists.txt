@@ -9,3 +9,4 @@ set(CMAKE_CXX_STANDARD 20)
 include_directories(common_cxx/)
 
 add_executable(n_pendulum source/main.cxx)
+target_link_libraries(n_pendulum PRIVATE raylib)
